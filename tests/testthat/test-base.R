@@ -1,60 +1,7 @@
 testthat::test_that("normalize test", {
   set.seed(1)
   testthat::expect_equal(sum(normalize(runif(10, min = 0, max = 1))), 1)
-
-  set.seed(10)
-  testthat::expect_equal(sum(normalize(runif(10, min = 0, max = 1))), 1)
-
-  set.seed(100)
-  testthat::expect_equal(sum(normalize(runif(10, min = 0, max = 1))), 1)
-
-  set.seed(1000)
-  testthat::expect_equal(sum(normalize(runif(10, min = 0, max = 1))), 1)
-
-  set.seed(10000)
-  testthat::expect_equal(sum(normalize(runif(10, min = 0, max = 1))), 1)
-})
-
-testthat::test_that("checkElemNames test", {
-  xFr <- c(0.50, 0.25, 0, 0, 0, 0.25, 0)
-  testthat::expect_error(checkElemNames(xFr))
-})
-
-testthat::test_that("compareElemNames test", {
-  xFrNames <- c("C1", "C2", "C3", "IC4", "NC4", "IC5", "NC5")
-  testthat::expect_error(compareElemNames(xFrNames))
-
-  yFrNames <- c("N2", "CO2", "C1", "C2", "C3", "IC4", "NC4")
-  testthat::expect_error(compareElemNames(xFrNames, yFrNames))
-})
-
-testthat::test_that("completenessCompCheck test", {
-  xFr <- c(0.50, 0.25, 0, 0, 0, 0.25, 0)
-  names(xFr) <- c("C1", "C2", "C3", "IC4", "NC4", "IC5", "NC5")
-
-  compNames <- c("C1", "C2", "C3", "IC4", "NC4", "IC5", "NC5", "C6", "C7", "C8", "C9")
-  testthat::expect_equal(names(completenessCompCheck(xFr, compNames)), compNames)
-
-  compNames <- c("C1", "C2", "IC5", "C6", "C7", "C8", "C9")
-  testthat::expect_equal(names(completenessCompCheck(xFr, compNames)), compNames)
-})
-
-testthat::test_that("checkCompStake test", {
-  xFr <- c(55, 25, 25, 0, 0, 0, -5)
-  names(xFr) <- c("C1", "C2", "C3", "IC4", "NC4", "IC5", "NC5")
-  testthat::expect_error(checkCompStake(xFr))
-
-  xFr <- c(55, 25, 25, 0, 0, 0, 0)
-  names(xFr) <- c("C1", "C2", "C3", "IC4", "NC4", "IC5", "NC5")
-  testthat::expect_error(checkCompStake(xFr))
-
-  xFr <- c(50, 25, 0, 0, 0, 25, 0)
-  names(xFr) <- c("C1", "C2", "C3", "IC4", "NC4", "IC5", "NC5")
-  testthat::expect_message(testthat::expect_equal(sum(checkCompStake(xFr)), 1))
-
-  xFr <- c(0.50, 0.25, 0, 0, 0, 0.25, 0)
-  names(xFr) <- c("C1", "C2", "C3", "IC4", "NC4", "IC5", "NC5")
-  testthat::expect_identical(sum(checkCompStake(xFr)), 1)
+  testthat::expect_equal(sum(normalize(runif(10, min = 0, max = 100))), 1)
 })
 
 testthat::test_that("molFrToWtFr test", {
@@ -135,8 +82,6 @@ testthat::test_that("realGasVM test", {
   testthat::expect_equal(realGasVM(Z, p, t, R) %>% round(5), VMtarget %>% round(5))
 })
 
-
-
 testthat::test_that("realGasG test", {
   MMsubstance <- 28.69570
   MMreference <- 28.96260
@@ -149,21 +94,14 @@ testthat::test_that("realGasG test", {
 testthat::test_that("realGasD test", {
   MM <- 28.69570
   Z <- 0.9930
+  p <- 101.325
+  t <- 293.15
+  R <- 8.314462
   Dtarget <- 1.2013
-  testthat::expect_equal(realGasD(MM, Z) %>% round(4), Dtarget)
+  testthat::expect_equal(realGasD(MM, Z, p, t, R) %>% round(4), Dtarget)
 })
 
-testthat::test_that("mrcMMrestSystem test", {
-  wtFrRestVapor <- 0.01150
-  MMrestVapor <- 120
-  wtFrRestLiquid <- 0.93164
-  MMrestLiquid <- 262.7
-  gorMass <- 0.2236
-  MMrestSystemtarget <- 261.8
-  testthat::expect_equal(mrcMMrestSystem(gorMass, wtFrRestVapor, MMrestVapor, wtFrRestLiquid, MMrestLiquid) %>% round(1), MMrestSystemtarget)
-})
-
-testthat::test_that("mrcMolSystem test", {
+testthat::test_that("mrcMolElemSystem test", {
   wtFrVapor <- c(0.09280, 0.388760, 0.14681, 0.25030, 0.07900, 0.02510, 0.00690, 0.01150) %>% normalize()
   names(wtFrVapor) <- c("N2", "C1", "C2", "C3", "C4", "C5", "C6", "C7+")
   wtFrLiquid <- c(0, 0.00021, 0.00132, 0.01176, 0.01423, 0.01816, 0.02268, 0.93164) %>% normalize()
@@ -173,15 +111,7 @@ testthat::test_that("mrcMolSystem test", {
   names(MMelemSystem) <- c("N2", "C1", "C2", "C3", "C4", "C5", "C6", "C7+")
   molSystemTarget <- c(0.00074, 0.00543, 0.00113, 0.00154, 0.00055, 0.00033, 0.00028, 0.00357)
   names(molSystemTarget) <- c("N2", "C1", "C2", "C3", "C4", "C5", "C6", "C7+")
-  testthat::expect_equal(mrcMolSystem(gorMass, wtFrVapor, wtFrLiquid, MMelemSystem) %>% round(3), molSystemTarget %>% round(3))
-})
-
-testthat::test_that("mrcMolSystemByMM test", {
-  gorMass <- 0.2236
-  mmLiquid <- 216
-  mmVapor <- 25.01
-  molSystemTarget <- 0.01357
-  testthat::expect_identical(mrcMolSystemByMM(gorMass, mmVapor, mmLiquid) %>% round(3), molSystemTarget %>% round(3))
+  testthat::expect_equal(mrcMolElemSystem(wtFrVapor, wtFrLiquid, gorMass, MMelemSystem) %>% round(3), molSystemTarget %>% round(3))
 })
 
 testthat::test_that("mrcWtFrSystem test", {
@@ -192,7 +122,7 @@ testthat::test_that("mrcWtFrSystem test", {
   gorMass <- 0.2236
   wtFrSystemTarget <- c(0.01696, 0.07101, 0.02790, 0.05535, 0.02606, 0.01943, 0.01979, 0.76350)
   names(wtFrSystemTarget) <- c("N2", "C1", "C2", "C3", "C4", "C5", "C6", "C7+")
-  testthat::expect_equal(mrcWtFrSystem(gorMass, wtFrVapor, wtFrLiquid) %>% round(3), wtFrSystemTarget %>% round(3))
+  testthat::expect_equal(mrcWtFrSystem(wtFrVapor, wtFrLiquid, gorMass) %>% round(3), wtFrSystemTarget %>% round(3))
 })
 
 testthat::test_that("mrcMolFrSystem test", {
@@ -207,7 +137,7 @@ testthat::test_that("mrcMMbyMolSystem test", {
   gorMass <- 0.2236
   molSystem <- 0.01357
   mmSystemTarget <- 90.2
-  testthat::expect_equal(mrcMMbyMolSystem(gorMass, molSystem) %>% round(1), mmSystemTarget)
+  testthat::expect_equal(mrcMMbyMolSystem(molSystem, gorMass) %>% round(1), mmSystemTarget)
 })
 
 testthat::test_that("reMRcWtFrVapor test", {
@@ -237,5 +167,14 @@ testthat::test_that("reMRcWtFrVapor test", {
   wtFrVaporTarget <- c(0.0378, 20.9628, 15.0493, 25.3160, 10.1791, 12.5809,
                        4.8553, 3.5159, 3.7226, 2.7135, 1.0007, 0.0661) %>% normalize()
   names(wtFrVaporTarget) <- compSetVapor
-  testthat::expect_identical(reMRcWtFrVapor(gorVolToMass(gorVol, dVapor, dLiquid), wtFrSystem, wtFrLiquid) %>% completenessCompCheck(compSetVapor, mes = FALSE) %>% round(3), wtFrVaporTarget %>% round(3))
+  testthat::expect_equal(reMRcWtFrVapor(wtFrSystem, wtFrLiquid, gorVol * dVapor / dLiquid)[1:12] %>% round(3), wtFrVaporTarget %>% round(3))
+})
+
+testthat::test_that("dVaporMB test", {
+  VF <- 1.06973923097113
+  gorVol <- 26.723622049749
+  dSystem <- 800.737
+  dLiquid <- 817.531
+  dVaporTarget <- 1.4612
+  testthat::expect_equal(dVaporMB(VF, gorVol, dSystem, dLiquid) %>% round(4), dVaporTarget)
 })

@@ -1,0 +1,259 @@
+---
+title: "target-functions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{target-functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(remrc)
+library(magrittr)
+```
+
+## Исходные данные: результаты стандартной сепарации
+
+### Отчёт о стандартной сепарации
+
+```{r}
+compSet <- c("CO2", "C1", "C2", "C3", "IC4", "NC4", "IC5", "NC5", "C6", "C7",
+              "C8", "C9", "C10", "C11", "C12", "C13", "C14", "C15", "C16",
+              "C17", "C18", "C19", "C20", "C21", "C22", "C23", "C24", "C25",
+              "C26", "C27", "C28", "C29", "C30", "C31", "C32", "C33", "C34",
+              "C35", "C36+")
+gorVol <- 26.723622049749
+VF <- 1.06973923097113
+```
+
+### Состав и свойства насыщенной нефти
+
+```{r}
+wtFrSystem <- c(0.0017, 0.9254, 0.7209, 1.4776, 1.0429, 1.7663, 1.4162,
+                1.3952, 1.9360, 3.9130, 6.2578, 3.7748, 3.5375, 2.9115,
+                2.7836, 3.0401, 3.0256, 3.5393, 3.5174, 4.8179, 3.9671,
+                3.0089, 3.5876, 3.4420, 3.1631, 2.9597, 2.7074, 2.7246,
+                2.2701, 2.2280, 1.7873, 1.7732, 1.4928, 1.1937, 0.9615,
+                0.8617, 0.7310, 0.5845, 8.7551) %>% normalize()
+names(wtFrSystem) <- compSet
+molFrSystem <- c(0.0059, 8.9739, 3.7290, 5.2120, 2.7911, 4.7274, 3.0533,
+                 3.0081, 3.5851, 6.3404, 9.0974, 4.8527, 4.1064, 3.0809,
+                 2.6894, 2.7023, 2.4771, 2.6726, 2.4646, 3.1622, 2.4585,
+                 1.7796, 2.0293, 1.8399, 1.6132, 1.4478, 1.2723, 1.2285,
+                 0.9836, 0.9267, 0.7166, 0.6861, 0.5582, 0.4318, 0.3369,
+                 0.2927, 0.2409, 0.1871, 2.2386) %>% normalize()
+names(molFrSystem) <- compSet
+mmSystem <- 155.55
+dSystem <- 800.737
+mmElemSystem <- c(44.01, 16.043, 30.07, 44.097, 58.123, 58.123, 72.15, 72.15,
+                  84, 96, 107, 121, 134, 147, 161, 175, 190, 206, 222, 237, 251,
+                  263, 275, 291, 305, 318, 331, 345, 359, 374, 388, 402, 416,
+                  430, 444, 458, 472, 486, 608.35)
+names(mmElemSystem) <- compSet
+```
+
+### Состав и свойства сепарированной нефти
+
+```{r}
+wtFrLiquid <- c(0, 0, 0.0592, 0.3767, 0.6209, 1.2669, 1.2574, 1.2973, 1.8535,
+               3.9684, 6.5006, 3.9460, 3.7008, 3.0459, 2.9122, 3.1805, 3.1654,
+               3.7028, 3.6799, 5.0404, 4.1503, 3.1478, 3.7533, 3.6009, 3.3091,
+               3.0964, 2.8324, 2.8504, 2.3749, 2.3309, 1.8699, 1.8550, 1.5617,
+               1.2488, 1.0059, 0.9015, 0.7648, 0.6115, 9.1594) %>% normalize()
+names(wtFrLiquid) <- compSet
+mmLiquid <- 186.82
+dLiquid <- 817.531
+```
+
+### Состав и свойства сепарированного газа
+
+```{r}
+compSetVaporTarget <- c("CO2", "C1", "C2", "C3", "IC4", "NC4", "IC5", "NC5",
+                        "C6", "C7", "C8", "C9")
+wtFrVaporTarget <- c(0.0378, 20.9628, 15.0493, 25.3160,
+                     10.1791, 12.5809, 4.8553, 3.5159,
+                     3.7226, 2.7135, 1.0007, 0.0661) %>%normalize()
+names(wtFrVaporTarget) <- compSetVaporTarget
+molFrVaporTarget <- c(0.0289, 43.9630, 16.8387, 19.3157, 5.8923, 7.2826, 2.2641,
+                      1.6396, 1.4910, 0.9510, 0.3147, 0.0184) %>% normalize()
+names(molFrVaporTarget) <- compSetVaporTarget
+dVaporTarget <- 1.41277784469918
+sElemVapor <- c(0.0728, 0.0436, 0.0894, 0.1288, 0.1703, 0.1783, 0.2168, 0.2345,
+                 0.2846, 0.3521, 0.4278, 0.5148)
+names(sElemVapor) <- compSetVaporTarget
+```
+
+## Исследование целевых функций
+
+```{r}
+dVaporLower <- 0.083752
+dVaporUpper <- 2.4958
+dVaporVec <- seq(dVaporLower, dVaporUpper, length.out = 10)
+compSetVapor <- c("CO2", "C1", "C2", "C3", "IC4", "NC4", "IC5", "NC5", "C6",
+                  "C7", "C8", "C9")
+print(dVaporVec %>% round(4))
+```
+
+```{r}
+reMRcDVapor(compSetVapor, gorVol, wtFrSystem, wtFrLiquid, dLiquid,
+            mmElemSystem %>% completenessCompCheck(compSetVapor),
+            sElemVapor) %>%
+  errorRevDiff(dVaporTarget) %>%
+  {
+    sapply(dVaporVec, .)
+  } %>%
+  round(5)
+```
+
+```{r}
+calcWtFrVapor <- function(compSetVapor, gorVol, wtFrSystem,
+                          wtFrLiquid, dLiquid) {
+  return(function(dVapor) {
+    checkElemNames(wtFrSystem)
+    wtFrSystem %<>% checkCompStake()
+    checkElemNames(wtFrLiquid)
+    wtFrLiquid %<>% checkCompStake()
+    compareElemNames(names(wtFrSystem), names(wtFrLiquid))
+
+    reMRcWtFrVapor(wtFrSystem, wtFrLiquid, gorVol * dVapor / dLiquid) %>%
+      completenessCompCheck(compSetVapor)
+  })
+}
+
+calcWtFrVapor(compSetVapor, gorVol, wtFrSystem, wtFrLiquid, dLiquid) %>%
+  errorMSE(wtFrVaporTarget) %>%
+  {
+    sqrt(sapply(dVaporVec, .) * 10000)
+  } %>%
+  round(5)
+```
+
+```{r}
+reMRcMolFrSytem(compSetVapor, gorVol, wtFrSystem,
+                wtFrLiquid, dLiquid, mmElemSystem,
+                mmElemSystem %>% completenessCompCheck(compSetVapor),
+                sElemVapor) %>%
+  errorMSE(molFrSystem) %>%
+  {
+    sqrt(sapply(dVaporVec, .) * 10000)
+  } %>%
+  round(5)
+```
+
+```{r}
+reMRcMMSystem(compSetVapor, gorVol, wtFrSystem,
+                wtFrLiquid, dLiquid, mmElemSystem,
+                mmElemSystem %>% completenessCompCheck(compSetVapor),
+                sElemVapor) %>%
+  errorRevDiff(mmSystem) %>%
+  {
+    sapply(dVaporVec, .)
+  } %>%
+  round(3)
+```
+
+```{r}
+reMRcSumVapor(compSetVapor, gorVol, wtFrSystem, wtFrLiquid, dLiquid) %>%
+  errorRevDiff(1) %>%
+  {
+    sapply(dVaporVec, .)
+  } %>%
+  round(5)
+```
+
+```{r}
+sapply(dVaporVec, function(x) 
+  errorRevDiff(reMRcDVapor(compSetVapor, gorVol, wtFrSystem, wtFrLiquid,
+                           dLiquid, mmElemSystem %>%
+                             completenessCompCheck(compSetVapor),
+                           sElemVapor), x)(x)) %>%
+  round(5)
+```
+
+## Поиск целевой переменной методом Ньютона-Рафсона
+
+```{r, warning = FALSE}
+reMRcSumVapor(compSetVapor, gorVol, wtFrSystem, wtFrLiquid, dLiquid) %>%
+  errorRevDiff(1) %>%
+  dSearch(a = dVaporLower, b = dVaporUpper) %>%
+  round(4)
+```
+
+```{r, warning = FALSE}
+dSearch(function(x)
+  errorRevDiff(reMRcDVapor(compSetVapor, gorVol, wtFrSystem,
+                           wtFrLiquid, dLiquid,
+                           mmElemSystem %>%
+                             completenessCompCheck(compSetVapor),
+                           sElemVapor), x)(x),
+  a = dVaporLower,
+  b = dVaporUpper) %>%
+  round(4)
+```
+
+## Оценка оптимального множества компонентов по целевым функциям
+
+```{r, warning = FALSE}
+compSetVaporList <- list(compSetVapor[1:12], compSetVapor[1:11],
+                         compSetVapor[1:10], compSetVapor[1:9],
+                         compSetVapor[1:8], compSetVapor[1:7],
+                         compSetVapor[2:12], compSetVapor[2:11],
+                         compSetVapor[2:10], compSetVapor[2:9],
+                         compSetVapor[2:8], compSetVapor[2:7])
+
+funcTarget <- function(x)
+  dSearch(function(y)
+    errorRevDiff(reMRcDVapor(x, gorVol, wtFrSystem,
+                             wtFrLiquid, dLiquid,
+                             mmElemSystem %>%
+                               completenessCompCheck(x),
+                             sElemVapor %>%
+                               completenessCompCheck(x)), y)(y),
+    a = dVaporLower,
+    b = dVaporUpper)
+
+dVaporDiffComp <- sapply(compSetVaporList, funcTarget)
+print(round(dVaporDiffComp, 4))
+```
+
+```{r}
+mapply(function(x, y) errorRevDiff(reMRcDVapor(x, gorVol, wtFrSystem,
+                                               wtFrLiquid, dLiquid,
+                                               mmElemSystem %>%
+                                                 completenessCompCheck(x),
+                                               sElemVapor %>%
+                                                 completenessCompCheck(x)),
+                                   dVaporMB(VF, gorVol, dSystem, dLiquid))(y),
+       compSetVaporList,
+       dVaporDiffComp) %>%
+  round(5)
+```
+
+```{r}
+mapply(function(x, y) errorMSE(reMRcMolFrSytem(x, gorVol, wtFrSystem,
+                                               wtFrLiquid, dLiquid,
+                                               mmElemSystem,
+                                               mmElemSystem %>%
+                                                 completenessCompCheck(x),
+                                               sElemVapor %>%
+                                                 completenessCompCheck(x)),
+                               molFrSystem)(y),
+       compSetVaporList,
+       dVaporDiffComp) * 10000 %>%
+  sqrt()
+```
+
+```{r}
+mapply(function(x, y) errorRevDiff(reMRcMMSystem(x, gorVol, wtFrSystem,
+                                                 wtFrLiquid, dLiquid,
+                                                 mmElemSystem,
+                                                 mmElemSystem %>%
+                                                   completenessCompCheck(x),
+                                                 sElemVapor %>%
+                                                   completenessCompCheck(x)),
+                               mmSystem)(y),
+       compSetVaporList,
+       dVaporDiffComp) %>%
+  round(3)
+```
